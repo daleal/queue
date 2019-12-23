@@ -46,19 +46,10 @@ from counter import Counter
 from number import Number
 from key_manager import generate_random_key
 
-try:
-    # Setup counter in database
-    COUNTER = Counter.query.one_or_none()
-    if COUNTER is None:
-        COUNTER = Counter()
-        db.session.add(COUNTER)
-        db.session.commit()
-except Exception as err:
-    app.logger.error(err)
-
 
 @app.route("/")
 def index():
+    app.logger.info("Request to index action")
     return "https://www.github.com/daleal/queue"
 
 
@@ -66,6 +57,7 @@ def index():
 def get_next():
     """Generates a new number with a key and returns the information."""
     try:
+        app.logger.info("GET request to get_next action")
         data = request.get_json(force=True)
 
         if "key" not in data:
@@ -86,14 +78,17 @@ def get_next():
 
         app.logger.info(f"Generating number...")
 
-        number_key = generate_random_key()
-        number = Number(COUNTER.get(), number_key)
+        counter = Counter.get_counter()
 
-        # Increment counter
-        COUNTER.increment()
+        number_key = generate_random_key()
+        number = Number(counter.get(), number_key)
 
         # Save Number in the database
         db.session.add(number)
+        db.session.commit()
+
+        # Increment counter
+        counter.increment()
         db.session.commit()
 
         app.logger.info(
@@ -115,6 +110,7 @@ def get_next():
 def check_number(position):
     """Checks if number and plain key match."""
     try:
+        app.logger.info("POST request to check_number action")
         data = request.get_json(force=True)
 
         if "key" not in data:
@@ -133,18 +129,20 @@ def check_number(position):
                 "message": "Invalid key"
             }), 401
 
-        if set(["plain_key"]) != set(data.keys()):
+        if set(["key", "plain_key"]) != set(data.keys()):
             app.logger.info(f"Invalid request body keys {data.keys()}")
             return jsonify({
                 "success": False,
                 "message": "Invalid request body"
             }), 400
 
-        if position >= COUNTER.get():
+        counter = Counter.get_counter()
+
+        if position >= counter.get():
             # Number has not been emmited yet
             app.logger.info(
                 f"Number {position} tried to be accessed. Last number created "
-                f"was {COUNTER.get() - 1}"
+                f"was {counter.get() - 1}"
             )
             return jsonify({
                 "success": False,
@@ -152,6 +150,9 @@ def check_number(position):
             }), 404
 
         plain_key = data["plain_key"]
+
+        app.logger.info(f"Verifying number {position} with key {plain_key}...")
+
         number = Number.query.filter_by(position=position).first()
 
         if not number.check_plain_key(plain_key):
@@ -163,6 +164,10 @@ def check_number(position):
                 "success": False,
                 "message": "Invalid number key"
             }), 401
+
+        app.logger.info(
+            f"Number {position} verified correctly with key {plain_key}"
+        )
 
         return jsonify({"success": True}), 200
 
