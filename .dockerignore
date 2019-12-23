@@ -1,0 +1,18 @@
+# Ignore everything
+*
+
+# Include application files
+!migrations
+!app.py
+!config.py
+!counter.py
+!key_manager.py
+!manage.py
+!number.py
+
+# Include build files
+!requirements.txt
+!entrypoint.sh
+
+# Include misc files
+!LICENSE
