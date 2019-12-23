@@ -15,19 +15,19 @@ class Counter(db.Model):
     counter = db.Column(db.Integer())
 
     def __init__(self):
-        self.__counter = 1
+        self.counter = 1
 
     def get(self):
         """Returns the counter."""
-        return self.__counter
+        return self.counter
 
     def increment(self):
         """Increments the counter."""
-        self.__counter += 1
+        self.counter += 1
 
     def reset(self):
         """Resets the counter."""
-        self.__counter = 1
+        self.counter = 1
 
     def __repr__(self):
         return f"<Counter - id {self.id}>"
@@ -38,3 +38,17 @@ class Counter(db.Model):
             "id": self.id,
             "counter": self.get()
         }
+
+    @staticmethod
+    def get_counter():
+        """Gets the counter from the database."""
+        try:
+            # Setup counter in database
+            counter = Counter.query.one_or_none()
+            if counter is None:
+                counter = Counter()
+                db.session.add(counter)
+                db.session.commit()
+            return counter
+        except Exception as err:
+            app.logger.error(err)
