@@ -133,7 +133,7 @@ def check_number(position):
                 "message": "Invalid key"
             }), 401
 
-        if set(["plain_key"]) != set(data.keys()):
+        if set(["key", "plain_key"]) != set(data.keys()):
             app.logger.info(f"Invalid request body keys {data.keys()}")
             return jsonify({
                 "success": False,
