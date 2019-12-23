@@ -150,6 +150,9 @@ def check_number(position):
             }), 404
 
         plain_key = data["plain_key"]
+
+        app.logger.info(f"Verifying number {position} with key {plain_key}...")
+
         number = Number.query.filter_by(position=position).first()
 
         if not number.check_plain_key(plain_key):
@@ -161,6 +164,10 @@ def check_number(position):
                 "success": False,
                 "message": "Invalid number key"
             }), 401
+
+        app.logger.info(
+            f"Number {position} verified correctly with key {plain_key}"
+        )
 
         return jsonify({"success": True}), 200
 
